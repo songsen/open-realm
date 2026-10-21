@@ -211,7 +211,7 @@ Shared video policy is controlled separately from the fallback resolution index:
 - `vid_native 0` uses `vid_mode`; with fullscreen enabled the renderer requests an exact SDL fullscreen mode and falls back to a window if the requested display mode is unavailable;
 - `vid_hidden 1` suppresses native/fullscreen transitions so bounded hidden renderer tests retain their explicit logical size.
 
-The shared cvar defaults remain windowed/non-native so other games are unchanged. Warcraft III ships `vid_native 1`, `vid_fullscreen 1`, and `vid_mode 4`: a clean WC3 launch therefore fills the current desktop at native resolution (1280x800 on an undocked Steam Deck), while 1280x720 remains the widescreen fallback if native mode is disabled or desktop-mode discovery fails. WoW retains its existing `vid_mode 2` policy and SC2 retains its own setting. User config, autoexec, and command-line cvars can override these values.
+The shared cvar defaults remain windowed/non-native so other games are unchanged. Warcraft III ships `vid_native 0`, `vid_fullscreen 0`, and `vid_mode 4`: a clean WC3 launch therefore opens a 1280x720 window, while the Resolution popup's `Native` choice restores native fullscreen (`vid_native 1` + `vid_fullscreen 1`). The engine also registers `r_vsync 1` by default (the WC3 config repeats it), so presentation blocks on the display refresh instead of submitting frames as fast as the GPU can retire them; `com_maxfps` still caps below the refresh rate. WoW retains its existing `vid_mode 2` policy and SC2 retains its own setting. User config, autoexec, and command-line cvars can override these values.
 
 The WC3 Resolution popup appends a `Native` choice after all numbered modes. Choosing `Native` enables native fullscreen. Choosing a fixed resolution disables `vid_native` without renumbering the persisted `vid_mode` table; `vid_fullscreen` can still be controlled independently from the console/config.
 
@@ -233,7 +233,7 @@ build/bin/openwow -data data/world-of-warcraft -config '' -vid_modes +menu_chara
 `make test-commands` covers exact flag matching, disabled/enabled diagnostics, loading the actual WoW defaults,
 and an explicit resolution override. Runtime checks must cover logs with and without the flag in ROC/TFT, WoW and SC2.
 Verified on macOS: all eight 10-frame launches exited successfully; the list appeared only with `-vid_modes`.
-Those historical verification results predate native-fullscreen WC3 defaults: WoW still uses its configured 1024x768 window unless overridden, while WC3 now defaults to the current desktop resolution/fullscreen. SC2 retains its own configured policy.
+Those historical verification results predate the current windowed WC3 defaults: WoW still uses its configured 1024x768 window unless overridden, while WC3 now opens a 1280x720 window with vsync. SC2 retains its own configured policy.
 
 Use this bounded diagnostic after changing video or renderer setup:
 

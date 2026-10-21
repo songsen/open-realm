@@ -176,6 +176,15 @@ void SCR_SetupViewBlend(viewDef_t *view, player_t const *ps, texture_t const *co
 }
 
 void SCR_DrawScreenField(uint32_t msec) {
+    /* A minimized client keeps simulating, networking and playing audio, but
+     * submits no frames and leaves the last presented image on screen. Focus
+     * loss still presents, so captures, streams and multi-monitor setups keep
+     * seeing the running game. `vid_hidden` captures always render, and a
+     * pending screenshot keeps drawing until it is taken. */
+    if (!Cvar_Integer("vid_hidden", 0) && !cl_screenshot_pending &&
+        Cvar_Integer("vid_pause_minimized", 1) && CL_WindowMinimized()) {
+        return;
+    }
     re.BeginFrame();
     if (CL_MovieActive()) {
         SCR_UpdateSystemCursor(true);

@@ -72,6 +72,7 @@ void test_client_stubs_clear_cvars(void);
 extern uint32_t test_fow_upload_calls;
 extern uint32_t test_cursor_draw_calls;
 extern uint32_t test_client_realtime, test_cursor_time;
+extern bool test_window_minimized;
 extern color32_t test_cursor_tint;
 extern char test_forwarded_command[128];
 extern char test_menu_action[32];
@@ -593,6 +594,34 @@ TEST(net, no_refresh_preserves_client_loop_without_screen_submission) {
     T_EQ(test_begin_frames, 0); T_EQ(test_end_frames, 0);
     test_client_stubs_set_cvar("r_norefresh", "0"); SCR_UpdateScreen(16);
     T_EQ(test_begin_frames, 1); T_EQ(test_end_frames, 1);
+    scr_initialized = false;
+}
+
+/* A minimized window stops presenting without stopping the client loop. */
+TEST(net, minimized_window_skips_screen_submission) {
+    test_client_stubs_init(); test_client_stubs_clear_cvars();
+    test_begin_frames = test_end_frames = 0;
+    re.BeginFrame = capture_begin_frame; re.EndFrame = capture_end_frame;
+    cls.state = ca_active; cls.key_dest = key_game; scr_initialized = true;
+    test_client_stubs_set_cvar("r_hud", "0"); test_client_stubs_set_cvar("scr_showfps", "0");
+
+    test_client_stubs_set_cvar("vid_pause_minimized", "1");
+    test_window_minimized = true;
+    SCR_UpdateScreen(16);
+    T_EQ(test_begin_frames, 0); T_EQ(test_end_frames, 0);
+
+    /* The escape hatch restores presentation for tools that inspect a
+     * minimized window. */
+    test_client_stubs_set_cvar("vid_pause_minimized", "0");
+    SCR_UpdateScreen(16);
+    T_EQ(test_begin_frames, 1); T_EQ(test_end_frames, 1);
+
+    test_client_stubs_set_cvar("vid_pause_minimized", "1");
+    test_window_minimized = false;
+    SCR_UpdateScreen(16);
+    T_EQ(test_begin_frames, 2); T_EQ(test_end_frames, 2);
+
+    test_window_minimized = false;
     scr_initialized = false;
 }
 

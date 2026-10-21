@@ -196,6 +196,7 @@ All cvars registered in `Cvar_Init()`:
 | `vid_mode` | `"0"` | CVAR_ARCHIVE | Fallback resolution-table index; mode 0 is 640x480 |
 | `vid_native` | `"0"` | CVAR_ARCHIVE | Use the current SDL desktop resolution instead of `vid_mode` |
 | `vid_fullscreen` | `"0"` | CVAR_ARCHIVE | Fullscreen policy; native + fullscreen uses fullscreen-desktop |
+| `vid_pause_minimized` | `"1"` | CVAR_ARCHIVE | Stop submitting frames while the window is minimized; simulation, networking and audio continue, and focus loss keeps rendering |
 | `r_model_detail` | `"2"` | CVAR_ARCHIVE | Model detail level |
 | `r_anim_quality` | `"2"` | CVAR_ARCHIVE | Animation quality |
 | `r_texture_quality` | `"2"` | CVAR_ARCHIVE | Texture quality |

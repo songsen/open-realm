@@ -108,10 +108,14 @@ OpenWarcraft3 registers the archived `com_maxfps` cvar with a default of `64`, m
 
 The limiter lives in `common/main.c` and applies only to non-dedicated clients. It measures the complete main-loop iteration with SDL's performance counter, including simulation, client work, rendering, and any VSync blocking, then sleeps/yields only for the remaining part of the target frame interval. It therefore does **not** change `FRAMETIME`, server tick accounting, animation/game timers, or `com_fast_forward`; if a frame already takes longer than the cap interval, no extra delay is added. `r_vsync` can still impose a lower effective frame rate than `com_maxfps`.
 
+The engine registers `r_vsync 1` by default (the WC3 config repeats it), so presentation blocks on the display refresh (60 FPS on a 60 Hz panel) and the GPU is not handed frames as fast as it can retire them. The 64 FPS `com_maxfps` cap therefore only matters above 64 Hz or when vsync is disabled for a measurement. GPU utilization at the default settings reflects the cost of one scene per refresh interval, not extra frames: if the GPU cannot finish a frame in time, measured FPS drops below the refresh rate instead of utilization rising further. Use `r_stats 1` to separate the two cases, and `r_norefresh 1` to confirm that a suspected cost is renderer submission rather than simulation.
+
+Presentation pauses only while the window is minimized (`vid_pause_minimized 1`): `SCR_DrawScreenField` submits no frames and leaves the last image on screen, while simulation, networking and audio keep running. Focus loss keeps presenting, so captures, streams and multi-monitor setups keep seeing the running game. `vid_hidden 1` captures always render, and a pending screenshot keeps presenting until it is taken.
+
 Keep `com_maxfps` separate from `com_frame_limit`: the latter is a diagnostic auto-quit counter for main-loop iterations. Useful commands are:
 
 ```bash
-# Default Warcraft III cap: 64 FPS
+# Default Warcraft III launch: 1280x720 window, vsync on, com_maxfps 64
 build/bin/openwarcraft3 -data 'data/Warcraft III' +map 'Maps/Campaign/Human02.w3m'
 
 # Uncapped rendering/performance measurement
@@ -119,6 +123,9 @@ build/bin/openwarcraft3 -data 'data/Warcraft III' +set com_maxfps 0 +set r_vsync
 
 # Explicit alternate cap
 build/bin/openwarcraft3 -data 'data/Warcraft III' +set com_maxfps 120 +map 'Maps/Campaign/Human02.w3m'
+
+# Opt-in low-end preset (shadows, particles and dynamic lights off)
+build/bin/openwarcraft3 -data 'data/Warcraft III' +exec low.cfg +map 'Maps/Campaign/Human02.w3m'
 ```
 
 ## MDX keytrack and ground splat hot paths

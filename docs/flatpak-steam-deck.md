@@ -23,12 +23,14 @@ The Flatpak entry point is `/app/bin/openrealm-start`. Direct command-line
 launches may still pass `-data`, `-tft`, `-roc`, cvars, and commands through the
 wrapper.
 
-Warcraft III's shipped video policy enables `vid_native 1` and
-`vid_fullscreen 1`. SDL therefore uses fullscreen-desktop at the current display
-resolution without a mode switch. In Steam Deck handheld mode this is normally
-1280x800; when docked, OpenRealm follows the desktop resolution exposed by
-Gamescope/the desktop session. `vid_native 0` returns control to the persisted
-`vid_mode` fallback table.
+Warcraft III's shipped video policy opens a 1280x720 window (`vid_native 0`,
+`vid_fullscreen 0`, `vid_mode 4`) with `r_vsync 1`. The PortMaster entry point
+still requests native fullscreen explicitly, so on Steam Deck handheld mode SDL
+uses fullscreen-desktop at the current display resolution without a mode switch
+(1280x800); when docked, that follows the desktop resolution exposed by
+Gamescope/the desktop session. The Flatpak launcher passes no video flags, so its
+first launch is windowed until the user chooses `Native` in the Resolution popup.
+`vid_native 0` returns control to the persisted `vid_mode` fallback table.
 
 ## Writable State
 

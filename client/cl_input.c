@@ -21,11 +21,18 @@ static bool CL_MouseOverGameplayUIAt(int x, int y);
 
 static struct {
     uint32_t buttons, sent, last_ms;
-    bool select, look, focus, touch_pointer;
+    bool select, look, focus, touch_pointer, minimized;
     vec2_t down, travel;
     uint32_t last_select_entity, last_select_ms;
     SDL_Cursor *arrow, *cross, *hand;
 } input = { .focus = true };
+
+/* A minimized window cannot show anything, so it stops presenting. An
+ * unfocused window keeps presenting: captures, streams and multi-monitor
+ * setups must keep seeing the running game. */
+bool CL_WindowMinimized(void) {
+    return input.minimized;
+}
 
 /* Commands share a typed controller contract; each game decides how its player can move. */
 static void CL_SendInput(inputCmd_t const *cmd) {
@@ -598,6 +605,16 @@ static bool CL_WindowEvent(SDL_WindowEvent const *event) {
             input.focus = false;
             CL_ResetInput();
             break;
+#if SDL_VERSION_ATLEAST(2, 0, 2)
+        /* Some window managers report a minimized window that still holds
+         * focus, so track minimization separately from the focus flag. */
+        case SDL_WINDOWEVENT_MINIMIZED:
+            input.minimized = true;
+            break;
+        case SDL_WINDOWEVENT_RESTORED:
+            input.minimized = false;
+            break;
+#endif
         case SDL_WINDOWEVENT_MOVED:
         case SDL_WINDOWEVENT_RESIZED:
         case SDL_WINDOWEVENT_SIZE_CHANGED:
@@ -1514,6 +1531,43 @@ TEST(client_input, focus_loss_releases_game_order_queue) {
 
     SDL_FlushEvents(SDL_FIRSTEVENT, SDL_LASTEVENT); SDL_QuitSubSystem(SDL_INIT_EVENTS);
     cl = *old_cl; MemFree(old_cl); cls = old_cls; input = old_input; mouse = old_mouse;
+    SDL_SetModState(old_mod);
+}
+
+TEST(client_input, minimize_pauses_presentation_but_focus_loss_does_not) {
+    struct client_state *old_cl = MemAlloc(sizeof(cl));
+    struct client_static old_cls = cls;
+    __typeof__(input) old_input = input;
+    SDL_Keymod old_mod = SDL_GetModState();
+    SDL_Event event = { .window = { .type = SDL_WINDOWEVENT, .event = SDL_WINDOWEVENT_FOCUS_GAINED } };
+
+    memcpy(old_cl, &cl, sizeof(cl)); memset(&cl, 0, sizeof(cl));
+    T_EQ(SDL_InitSubSystem(SDL_INIT_EVENTS), 0); SDL_FlushEvents(SDL_FIRSTEVENT, SDL_LASTEVENT);
+    input = (__typeof__(input)){ .focus = true };
+    T_ASSERT(!CL_WindowMinimized());
+
+    T_EQ(SDL_PushEvent(&event), 1); CL_Input();
+    T_ASSERT(!CL_WindowMinimized());
+
+    /* Alt-tab keeps presenting: captures, streams and multi-monitor setups
+     * must keep seeing the running game. */
+    event.window.event = SDL_WINDOWEVENT_FOCUS_LOST;
+    T_EQ(SDL_PushEvent(&event), 1); CL_Input();
+    T_ASSERT(!input.focus);
+    T_ASSERT(!CL_WindowMinimized());
+
+#if SDL_VERSION_ATLEAST(2, 0, 2)
+    /* Some window managers minimize without dropping focus. */
+    T_EQ(SDL_PushEvent(&(SDL_Event){ .window = { .type = SDL_WINDOWEVENT, .event = SDL_WINDOWEVENT_MINIMIZED } }), 1);
+    CL_Input();
+    T_ASSERT(CL_WindowMinimized());
+    T_EQ(SDL_PushEvent(&(SDL_Event){ .window = { .type = SDL_WINDOWEVENT, .event = SDL_WINDOWEVENT_RESTORED } }), 1);
+    CL_Input();
+    T_ASSERT(!CL_WindowMinimized());
+#endif
+
+    SDL_FlushEvents(SDL_FIRSTEVENT, SDL_LASTEVENT); SDL_QuitSubSystem(SDL_INIT_EVENTS);
+    cl = *old_cl; MemFree(old_cl); cls = old_cls; input = old_input;
     SDL_SetModState(old_mod);
 }
 

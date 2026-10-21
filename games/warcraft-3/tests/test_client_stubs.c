@@ -29,6 +29,8 @@ color32_t test_cursor_tint;
 drawCursor_t test_cursor_presented;
 bool test_mouse_captured;
 bool CL_MouseCaptured(void) { return test_mouse_captured; }
+bool test_window_minimized;
+bool CL_WindowMinimized(void) { return test_window_minimized; }
 char test_forwarded_command[128];
 char test_menu_action[32];
 char test_menu_action_arg[128];

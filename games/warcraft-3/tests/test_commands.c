@@ -688,18 +688,38 @@ TEST(video_modes, steam_deck_mode_is_appended_without_renumbering_existing_modes
     T_EQ(video_mode_get((int)steam_deck_mode)->height, (uint32_t)800);
 }
 
-TEST(video_modes, wc3_defaults_to_native_fullscreen_with_vid_mode_fallback) {
+TEST(video_modes, wc3_ships_a_windowed_vid_mode_default_with_vsync) {
     setup_command_tests();
-    Cvar_Set("vid_native", "0");
-    Cvar_Set("vid_fullscreen", "0");
+    Cvar_Set("vid_native", "1");
+    Cvar_Set("vid_fullscreen", "1");
     Cvar_Set("vid_mode", "0");
+    Cvar_Set("r_vsync", "0");
 
     Cvar_LoadConfig("games/warcraft-3/share/config.cfg");
     Cbuf_Execute();
 
-    T_STREQ(Cvar_String("vid_native", NULL), "1");
-    T_STREQ(Cvar_String("vid_fullscreen", NULL), "1");
+    T_STREQ(Cvar_String("vid_native", NULL), "0");
+    T_STREQ(Cvar_String("vid_fullscreen", NULL), "0");
     T_STREQ(Cvar_String("vid_mode", NULL), "4");
+    T_STREQ(Cvar_String("r_vsync", NULL), "1");
+}
+
+TEST(video_modes, low_preset_only_changes_renderer_cost_knobs) {
+    setup_command_tests();
+    Cvar_Set("r_unit_shadows", "1");
+    Cvar_Set("r_particles", "2");
+    Cvar_Set("r_lights", "2");
+    Cvar_Set("r_fogofwar", "1");
+
+    T_ASSERT(Cvar_LoadConfig("games/warcraft-3/share/low.cfg"));
+    Cbuf_Execute();
+
+    T_STREQ(Cvar_String("r_unit_shadows", NULL), "0");
+    T_STREQ(Cvar_String("r_particles", NULL), "0");
+    T_STREQ(Cvar_String("r_lights", NULL), "0");
+    /* Fog of war is a visibility rule, not just a visual effect: the preset
+     * must never disable it, even though it is a large renderer cost. */
+    T_STREQ(Cvar_String("r_fogofwar", NULL), "1");
 }
 
 TEST(video_modes, wow_defaults_allow_explicit_override) {

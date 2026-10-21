@@ -570,6 +570,7 @@ void Cvar_Init(void) {
     Cvar_GetD("vid_mode",         "0",                 CVAR_ARCHIVE, "resolution index: 0=640x480, 1=800x600, 2=1024x768, ...");
     Cvar_GetD("vid_native",       "0",                 CVAR_ARCHIVE, "use the current desktop resolution instead of vid_mode");
     Cvar_GetD("vid_fullscreen",   "0",                 CVAR_ARCHIVE, "window mode: 0=windowed, 1=fullscreen");
+    Cvar_GetD("vid_pause_minimized", "1",               CVAR_ARCHIVE, "stop submitting frames while the window is minimized; focus loss keeps rendering");
     Cvar_GetD("vid_modes",        "0",                 0,            "log SDL display modes during video initialization");
     Cvar_GetD("r_model_detail",   "2",                 CVAR_ARCHIVE, "model LOD quality: 0=low, 1=medium, 2=high");
     Cvar_GetD("r_anim_quality",   "2",                 CVAR_ARCHIVE, "animation interpolation quality: 0=off, 2=full");
@@ -578,7 +579,7 @@ void Cvar_Init(void) {
     Cvar_GetD("r_lights",         "2",                 CVAR_ARCHIVE, "dynamic light count: 0=off, 1=minimal, 2=max");
     Cvar_GetD("r_unit_shadows",   "1",                 CVAR_ARCHIVE, "render blob shadows under units");
     Cvar_GetD("r_occlusion",      "1",                 CVAR_ARCHIVE, "frustum-cull off-screen entities");
-    Cvar_GetD("r_vsync",          "0",                 CVAR_ARCHIVE, "vertical sync: 0=off (use for perf testing), 1=on");
+    Cvar_GetD("r_vsync",          "1",                 CVAR_ARCHIVE, "vertical sync: 0=off (perf testing), 1=on (default: block on the display refresh)");
     Cvar_GetD("r_cursor",         "0",                 CVAR_ARCHIVE, "cursor: 0=native SDL, 1=game-authored");
     Cvar_GetD("r_stats",          "0",                 0,            "print per-frame draw/world stats to console each second");
     Cvar_GetD("r_norefresh",      "0",                 0,            "skip all screen rendering while client/server processing continues");

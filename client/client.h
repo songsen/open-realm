@@ -341,6 +341,9 @@ vec2_t CL_MouseScroll(void);
 bool CL_GameplayInputReady(void);
 bool CL_MouseCaptured(void);
 void CL_InitInput(void);
+/* True while the window is minimized. Focus loss keeps presenting so
+ * captures, streams and multi-monitor setups keep seeing the running game. */
+bool CL_WindowMinimized(void);
 
 // cl_tent.c
 void CL_ParseTEnt(sizeBuf_t *msg);
